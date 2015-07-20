@@ -17,33 +17,48 @@ import android.content.pm.PackageManager;
 
 public class MyAccessibilityService extends AccessibilityService {
 
-
+    public static String currentPackageName = "";
+    public static long beginTime = 0;
+    public static long endTime = 0;
+    public static long interval = 0;
     public static final String TAG = "MyAccessibilityService";
 
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
-        Log.v(TAG, "***** onAccessibilityEvent");
-        Toast.makeText(getApplicationContext(), "Got event from: " + event.getPackageName(), Toast.LENGTH_LONG).show();
 
         if (event.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
-            ComponentName componentName = new ComponentName(
-                    event.getPackageName().toString(),
-                    event.getClassName().toString()
-            );
 
-            ActivityInfo activityInfo = tryGetActivity(componentName);
-            boolean isActivity = activityInfo != null;
-            if (isActivity)
-                Log.i("CurrentActivity", componentName.flattenToShortString());
+            Log.v(TAG, "***** onAccessibilityEvent");
+//        Toast.makeText(getApplicationContext(), "Got event from: " + event.getPackageName(), Toast.LENGTH_LONG).show();
+
+
+            if(currentPackageName == "") {
+                currentPackageName = event.getPackageName().toString();
+                beginTime = System.currentTimeMillis();
+            }
+            endTime = System.currentTimeMillis();
+            interval = endTime - beginTime;
+            beginTime = System.currentTimeMillis();
+            Log.v(TAG, "PackageName: " + currentPackageName + ", interval: " + interval);
+            currentPackageName = event.getPackageName().toString();
+
+//            ComponentName componentName = new ComponentName(
+//                    event.getPackageName().toString(),
+//                    event.getClassName().toString()
+//            );
+//            ActivityInfo activityInfo = tryGetActivity(componentName);
+//            boolean isActivity = activityInfo != null;
+//            if (isActivity)
+//                Log.i("CurrentActivity", componentName.flattenToShortString());
         }
     }
-    private ActivityInfo tryGetActivity(ComponentName componentName) {
-        try {
-            return getPackageManager().getActivityInfo(componentName, 0);
-        } catch (PackageManager.NameNotFoundException e) {
-            return null;
-        }
-    }
+//    private ActivityInfo tryGetActivity(ComponentName componentName) {
+//        try {
+//            return getPackageManager().getActivityInfo(componentName, 0);
+//        } catch (PackageManager.NameNotFoundException e) {
+//            return null;
+//        }
+//    }
     @Override
     public void onInterrupt()
     {
@@ -55,7 +70,6 @@ public class MyAccessibilityService extends AccessibilityService {
     {
         Log.v(TAG, "***** onServiceConnected");
 
-
         AccessibilityServiceInfo info = new AccessibilityServiceInfo();
         info.eventTypes = AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED;
         info.notificationTimeout = 100;
@@ -63,7 +77,6 @@ public class MyAccessibilityService extends AccessibilityService {
         setServiceInfo(info);
 
         super.onServiceConnected();
-        Log.i("CurrentActivity", "test");
         //Configure these here for compatibility with API 13 and below.
         AccessibilityServiceInfo config = new AccessibilityServiceInfo();
         config.eventTypes = AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED;
