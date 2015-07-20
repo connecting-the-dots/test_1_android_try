@@ -21,6 +21,7 @@ public class MyAccessibilityService extends AccessibilityService {
     public static long beginTime = 0;
     public static long endTime = 0;
     public static long interval = 0;
+    public static boolean ignoring = false;
     public static final String TAG = "MyAccessibilityService";
 
     @Override
@@ -32,16 +33,32 @@ public class MyAccessibilityService extends AccessibilityService {
 //        Toast.makeText(getApplicationContext(), "Got event from: " + event.getPackageName(), Toast.LENGTH_LONG).show();
 
 
-            if(currentPackageName == "") {
+            if(currentPackageName.contentEquals("")) {
                 currentPackageName = event.getPackageName().toString();
                 beginTime = System.currentTimeMillis();
             }
-            endTime = System.currentTimeMillis();
-            interval = endTime - beginTime;
-            beginTime = System.currentTimeMillis();
-            Log.v(TAG, "PackageName: " + currentPackageName + ", interval: " + interval);
-            currentPackageName = event.getPackageName().toString();
+            else {
+                if (event.getPackageName().toString().contentEquals("com.android.systemui") ||
+                        event.getPackageName().toString().contentEquals("com.asus.launcher")) {
 
+                    if (ignoring) {
+                        return;
+                    }
+                    endTime = System.currentTimeMillis();
+                    ignoring = true;
+                }
+                else {
+                    if (ignoring) {
+                        ignoring = false;
+                    } else {
+                        endTime = System.currentTimeMillis();
+                    }
+                    interval = endTime - beginTime;
+                    beginTime = System.currentTimeMillis();
+                    Log.v(TAG, "PackageName: " + currentPackageName + ", interval: " + (interval / 1000));
+                    currentPackageName = event.getPackageName().toString();
+                }
+            }
 //            ComponentName componentName = new ComponentName(
 //                    event.getPackageName().toString(),
 //                    event.getClassName().toString()
