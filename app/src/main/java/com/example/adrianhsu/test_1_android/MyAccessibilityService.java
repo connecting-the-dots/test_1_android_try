@@ -32,50 +32,39 @@ public class MyAccessibilityService extends AccessibilityService {
             Log.v(TAG, "***** onAccessibilityEvent");
 //        Toast.makeText(getApplicationContext(), "Got event from: " + event.getPackageName(), Toast.LENGTH_LONG).show();
 
+            String tempPackageName = event.getPackageName().toString();
 
-            if(currentPackageName.contentEquals("")) {
-                currentPackageName = event.getPackageName().toString();
+            if(currentPackageName.contentEquals("")) { // first time
+                currentPackageName = tempPackageName;
                 beginTime = System.currentTimeMillis();
+                return;
+            }
+            if (tempPackageName.contentEquals("com.android.systemui") ||
+                    tempPackageName.contentEquals("com.asus.launcher")) {
+
+                if (ignoring) {
+                    return;
+                }
+                endTime = System.currentTimeMillis();
+                ignoring = true;
             }
             else {
-                if (event.getPackageName().toString().contentEquals("com.android.systemui") ||
-                        event.getPackageName().toString().contentEquals("com.asus.launcher")) {
-
-                    if (ignoring) {
+                if (ignoring) {
+                    ignoring = false;
+                } else {
+                    if (tempPackageName.contentEquals(currentPackageName)) {
                         return;
                     }
                     endTime = System.currentTimeMillis();
-                    ignoring = true;
                 }
-                else {
-                    if (ignoring) {
-                        ignoring = false;
-                    } else {
-                        endTime = System.currentTimeMillis();
-                    }
-                    interval = endTime - beginTime;
-                    beginTime = System.currentTimeMillis();
-                    Log.v(TAG, "PackageName: " + currentPackageName + ", interval: " + (interval / 1000));
-                    currentPackageName = event.getPackageName().toString();
-                }
+
+                interval = endTime - beginTime;
+                beginTime = System.currentTimeMillis();
+                Log.v(TAG, "PackageName: " + currentPackageName + ", interval: " + (interval / 1000));
+                currentPackageName = event.getPackageName().toString();
             }
-//            ComponentName componentName = new ComponentName(
-//                    event.getPackageName().toString(),
-//                    event.getClassName().toString()
-//            );
-//            ActivityInfo activityInfo = tryGetActivity(componentName);
-//            boolean isActivity = activityInfo != null;
-//            if (isActivity)
-//                Log.i("CurrentActivity", componentName.flattenToShortString());
         }
     }
-//    private ActivityInfo tryGetActivity(ComponentName componentName) {
-//        try {
-//            return getPackageManager().getActivityInfo(componentName, 0);
-//        } catch (PackageManager.NameNotFoundException e) {
-//            return null;
-//        }
-//    }
     @Override
     public void onInterrupt()
     {
